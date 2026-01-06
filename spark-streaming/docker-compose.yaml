@@ -1,0 +1,43 @@
+services:
+  spark-master:
+    build: .
+    container_name: spark-master
+    hostname: spark-master
+    ports:
+      - 7077:7077
+      - 8088:8088
+    env_file:
+      - .env
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8088
+    entrypoint: >
+      sh -c "
+        sleep 15 &&
+        /opt/spark/sbin/start-master.sh &&
+        tail -f /opt/spark/logs/spark-*-org.apache.spark.deploy.master.Master-*.out
+      "
+
+  spark-worker:
+    build: .
+    container_name: spark-worker
+    hostname: spark-worker
+    env_file:
+      - .env
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=4
+      - SPARK_WORKER_MEMORY=8G
+    ports:
+      - '8081:8081'
+    depends_on:
+      - spark-master
+    entrypoint: >
+      sh -c "
+        sleep 20 &&
+        /opt/spark/sbin/start-worker.sh spark://spark-master:7077 &&
+        tail -f /opt/spark/logs/spark-*-org.apache.spark.deploy.worker.Worker-*.out
+      "

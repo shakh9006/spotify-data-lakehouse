@@ -1,0 +1,42 @@
+[
+  {
+    "artist_id": "1f7b3d6c-8a1e-4b2e-9e2f-000000000001",
+    "artist_name": "Bruno Mars"
+  },
+  {
+    "artist_id": "2a8c4e7d-9b2f-5c3f-8f3e-000000000002",
+    "artist_name": "Dua Lipa"
+  },
+  {
+    "artist_id": "3b9d5f8e-0c3g-6d4g-9g4f-000000000003",
+    "artist_name": "The Weekend"
+  },
+  {
+    "artist_id": "4c0e6g9f-1d4h-7e5h-0h5g-000000000004",
+    "artist_name": "Imagine Dragons"
+  },
+  {
+    "artist_id": "5d1f7h0g-2e5i-8f6i-1i6h-000000000005",
+    "artist_name": "Kendrick Lamar"
+  },
+  {
+    "artist_id": "6e2g8i1h-3f6j-9g7j-2j7i-000000000006",
+    "artist_name": "Drake"
+  },
+  {
+    "artist_id": "7f3h9j2i-4g7k-0h8k-3k8j-000000000007",
+    "artist_name": "Central Cee"
+  },
+  {
+    "artist_id": "8g4i0k3j-5h8l-1i9l-4l9k-000000000008",
+    "artist_name": "Ed Sheeran"
+  },
+  {
+    "artist_id": "9h5j1l4k-6i9m-2j0m-5m0l-000000000009",
+    "artist_name": "Billie Eilish"
+  },
+  {
+    "artist_id": "0i6k2m5l-7j0n-3k1n-6n1m-000000000010",
+    "artist_name": "Coldplay"
+  }
+]
