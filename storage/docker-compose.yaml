@@ -4,6 +4,8 @@ services:
     container_name: nessie
     ports:
       - 19120:19120
+    networks:
+      - spotify-analytics
 
   minio:
     image: minio/minio:latest
@@ -23,6 +25,8 @@ services:
       retries: 3
     depends_on:
       - nessie
+    networks:
+      - spotify-analytics
 
   minio-client:
     image: minio/mc
@@ -39,6 +43,13 @@ services:
       /usr/bin/mc anonymous set download minio/spotify-warehouse;
       tail -f /dev/null
       "
+    networks:
+      - spotify-analytics
 
 volumes:
   minio-data:
+
+networks:
+  spotify-analytics:
+    external: true
+    name: spotify-analytics

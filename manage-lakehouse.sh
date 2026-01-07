@@ -19,39 +19,34 @@ start_services() {
     
     # Change to script directory to ensure docker-compose files are found
     cd "$SCRIPT_DIR"
+
+    # Step *: Create Network if it doesn't exist
+    if ! docker network ls | grep -q spotify-analytics; then
+        echo "Creating network spotify-analytics..."
+        docker network create spotify-analytics
+    fi
     
-    # Step 1: Start the simulator and Kafka services (Simulator + Kafka + Kafdrop)
-    echo "Starting simulator and Kafka services..."
+    # Step 1: Start the simulator and Kafka services (Simulator + Kafka + Kafdrop + Nessie + Minio + Trino)
+    echo "Starting simulator services (Simulator + Kafka + Kafdrop)..."
     docker compose -f ./simulator/docker-compose.yaml up -d --build
 
     sleep 5  # Allow services to initialize
 
     # Step 2: Start the storage services (Minio + Nessie)
-    echo "Starting storage services..."
+    echo "Starting storage services (Nessie + Minio)..."
     docker compose -f ./storage/docker-compose.yaml up -d --build
 
     sleep 5  # Allow services to initialize
 
-    # Step 3: Start the spark streaming services (Spark + Spark Master + Spark Worker)
-    echo "Starting spark streaming services..."
+    # Step 3: Start the spark streaming services (Spark Streaming)
+    echo "Starting spark streaming services (Spark Streaming)..."
     docker compose -f ./spark-streaming/docker-compose.yaml up -d --build
 
+    # Step 4: Start the trino services (Trino)
+    echo "Starting trino services (Trino)..."
+    docker compose -f ./trino/docker-compose.yaml up -d --build
+
     sleep 5  # Allow services to initialize
-
-    # Step *: Create Network if it doesn't exist
-    if ! docker network ls | grep -q spotify-analytics; then
-        docker network create spotify-analytics
-
-        docker network connect spotify-analytics broker
-        docker network connect spotify-analytics zookeeper
-        docker network connect spotify-analytics kafdrop
-        docker network connect spotify-analytics simulator
-        docker network connect spotify-analytics minio
-        docker network connect spotify-analytics nessie
-        docker network connect spotify-analytics spark-master
-        docker network connect spotify-analytics spark-worker
-
-    fi
     
     echo "All services started successfully."
     echo ""
@@ -61,8 +56,8 @@ start_services() {
     echo "  - Kafdrop: http://localhost:9009"
     echo "  - Minio: http://localhost:9000"
     echo "  - Nessie: http://localhost:19120"
-    echo "  - Spark Master: http://localhost:8088"
-    echo "  - Spark Worker: http://localhost:8081"
+    echo "  - Spark Streaming: http://localhost:8088"
+    echo "  - Trino: http://localhost:8080"
     echo ""
 }
 
@@ -84,6 +79,9 @@ stop_services() {
     echo "Stopping spark streaming services..."
     docker compose -f ./spark-streaming/docker-compose.yaml down -v
 
+    echo "Stopping trino services..."
+    docker compose -f ./trino/docker-compose.yaml down -v
+
     echo "All services stopped and volumes cleaned up."
     echo ""
 }
@@ -102,7 +100,7 @@ case "${1:-help}" in
         echo "Usage: $0 [start|stop]"
         echo ""
         echo "Commands:"
-        echo "  start    Start all lakehouse services (Simulator, Kafka, Kafdrop, Spark Streaming, Storage)"
+        echo "  start    Start all lakehouse services (Simulator, Kafka, Kafdrop, Spark Streaming, Storage, Trino)"
         echo "  stop     Stop all services and clean up volumes"
         echo ""
         echo "Examples:"
@@ -115,7 +113,7 @@ case "${1:-help}" in
         echo "  - Kafdrop: http://localhost:9009"
         echo "  - Minio: http://localhost:9000"
         echo "  - Nessie: http://localhost:19120"
-        echo "  - Spark Master: http://localhost:8088"
-        echo "  - Spark Worker: http://localhost:8081"
+        echo "  - Spark Streaming: http://localhost:8088"
+        echo "  - Trino: http://localhost:8080"
         ;;
 esac

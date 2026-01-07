@@ -1,43 +1,27 @@
 services:
-  spark-master:
+  spark-streaming:
     build: .
-    container_name: spark-master
-    hostname: spark-master
-    ports:
-      - 7077:7077
-      - 8088:8088
+    container_name: spark-streaming
+    hostname: spark-streaming
+    volumes:
+      - ./:/opt/app
+      - checkpoints:/opt/checkpoints
     env_file:
       - .env
-    environment:
-      - SPARK_MODE=master
-      - SPARK_MASTER_HOST=spark-master
-      - SPARK_MASTER_PORT=7077
-      - SPARK_MASTER_WEBUI_PORT=8088
-    entrypoint: >
-      sh -c "
-        sleep 15 &&
-        /opt/spark/sbin/start-master.sh &&
-        tail -f /opt/spark/logs/spark-*-org.apache.spark.deploy.master.Master-*.out
-      "
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - local[2]
+      - --packages
+      - org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.2,org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.2,org.apache.iceberg:iceberg-aws-bundle:1.9.2,org.projectnessie.nessie-integrations:nessie-spark-extensions-3.5_2.12:0.102.5
+      - /opt/app/consumer.py
+    networks:
+      - spotify-analytics
 
-  spark-worker:
-    build: .
-    container_name: spark-worker
-    hostname: spark-worker
-    env_file:
-      - .env
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_CORES=4
-      - SPARK_WORKER_MEMORY=8G
-    ports:
-      - '8081:8081'
-    depends_on:
-      - spark-master
-    entrypoint: >
-      sh -c "
-        sleep 20 &&
-        /opt/spark/sbin/start-worker.sh spark://spark-master:7077 &&
-        tail -f /opt/spark/logs/spark-*-org.apache.spark.deploy.worker.Worker-*.out
-      "
+volumes:
+  checkpoints:
+
+networks:
+  spotify-analytics:
+    external: true
+    name: spotify-analytics

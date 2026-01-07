@@ -1,0 +1,84 @@
+x-superset-user: &superset-user root
+x-superset-volumes: &superset-volumes
+  - ./docker:/app/docker
+  - ./docker/superset_config.py:/app/pythonpath/superset_config.py
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+      POSTGRES_DB: superset
+    volumes:
+      - db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'superset']
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
+    networks:
+      - spotify-analytics
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis:/data
+    networks:
+      - spotify-analytics
+
+  superset:
+    image: apache/superset:3.0.0-py310
+    env_file:
+      - path: docker/.env
+        required: true
+    command: ['/app/docker/docker-bootstrap.sh', 'app']
+    restart: unless-stopped
+    ports:
+      - ${SUPERSET_PORT:-8088}:8088
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    user: *superset-user
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+    volumes: *superset-volumes
+    environment:
+      SUPERSET__SQLALCHEMY_EXAMPLES_URI: 'duckdb:////app/data/examples.duckdb'
+    networks:
+      - spotify-analytics
+
+  superset-init:
+    image: apache/superset:3.0.0-py310
+    command: ['/app/docker/docker-init.sh']
+    env_file:
+      - path: docker/.env
+        required: true
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_started
+    user: *superset-user
+    volumes: *superset-volumes
+    environment:
+      SUPERSET__SQLALCHEMY_EXAMPLES_URI: 'duckdb:////app/data/examples.duckdb'
+      SUPERSET_LOAD_EXAMPLES: 'yes'
+    healthcheck:
+      disable: true
+    networks:
+      - spotify-analytics
+
+networks:
+  spotify-analytics:
+    external: true
+    name: spotify-analytics
+
+volumes:
+  db-volume:
+  redis:
+    external: false

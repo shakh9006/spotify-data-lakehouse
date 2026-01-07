@@ -32,8 +32,15 @@ RUN mkdir -p /opt/spark/events && mkdir -p /opt/spark/jars/iceberg \
     && wget -q https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar \
     && cp *.jar /opt/spark/jars/ && chown -R spark:spark /opt/spark/jars/
 
-RUN pip3 install --no-cache-dir pyspark==3.5.2
+RUN mkdir -p /opt/checkpoints && chown -R spark:spark /opt/checkpoints
+
+ENV SPARK_DRIVER_MEMORY=2g
+ENV SPARK_EXECUTOR_MEMORY=2g
+ENV SPARK_DRIVER_OPTS="-Xms512m -Xmx2g -XX:+UseG1GC"
 
 USER spark
 
-EXPOSE 4040
+WORKDIR /opt/app
+
+COPY requirements.txt .
+RUN pip3 install --no-cache-dir -r requirements.txt

@@ -1,0 +1,12 @@
+dbt_spotify:
+  outputs:
+    trino_output:
+      type: trino
+      method: none
+      user: dbt
+      database: iceberg
+      host: trino-coordinator
+      port: 8080
+      schema: ods
+      threads: 2
+  target: trino_output
